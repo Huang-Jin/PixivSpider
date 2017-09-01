@@ -1,4 +1,4 @@
-# Python
+# Internet worm
 
 This project was written by Python3.52.
 
