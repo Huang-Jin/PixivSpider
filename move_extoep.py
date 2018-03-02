@@ -1,10 +1,21 @@
 import os,shutil
 import configparser
 
-if __name__ == '__main__':
+def move_from_excellent_to_ep():
     config_path = './config_files/move.cfg'
     image_path = './original_images/excellent'
     save_path = './ep_images'
+    if not os.path.exists(config_path):
+        print('Could not find the config file.')
+        os.system('pause')
+        return
+    if not os.path.exists(image_path):
+        print('Could not find the image path.')
+        os.system('pause')
+        return
+    if not os.path.exists(save_path):
+        print('Could not find the save path, created one.')
+        os.mkdir(save_path)
     config = configparser.ConfigParser()
     config.read(config_path)
     i_num = config.getint('image','num')
@@ -22,3 +33,6 @@ if __name__ == '__main__':
     with open(config_path,'w') as cf:
         config.write(cf)
     os.system('pause')
+
+if __name__ == '__main__':
+    move_from_excellent_to_ep()
