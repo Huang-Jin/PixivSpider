@@ -240,7 +240,7 @@ class MultiThreadPixivSpider(Spider):
                 index += len(imgurl)
                 page += 1
 
-            pbar = tqdm(total=index)
+            pbar = tqdm(total=index, ascii=True)
             for i in range(len(indexes)):
                 p = threading.Thread(target=self.save_image, args=(imgurls[i], save_path, indexes[i], q, pbar))
                 p.start()
