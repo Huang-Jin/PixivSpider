@@ -1,8 +1,3 @@
-# -*- coding: utf-8 -*-
-# @Time    : 2018/2/26 0026 20:41
-# @Author  : Jin Huang
-# @File    : pixiv_spider_manager.py
-
 import os
 import time
 import datetime
