@@ -15,7 +15,7 @@ def move_from_ep_to_excellent():
         return
     if not os.path.exists(save_path):
         print('Could not find the save path, created one.')
-        os.mkdir(save_path)
+        os.makedirs(save_path)
     i_num = 0
     for dirpath, dirnames, filenames in os.walk(image_path):
         for filename in filenames:

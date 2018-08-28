@@ -85,7 +85,7 @@ class MultiProcessPixivSpider(Spider):
             # ex_path = save_path.replace('pixiv_images/','pixiv_images/excellent/')
             if not (os.path.exists(save_path)):
                 print(save_path + " now starts.")
-                os.mkdir(save_path)
+                os.makedirs(save_path)
             else:
                 print(save_path[-8::] + ' has been already retrieved.')
                 return None
@@ -115,8 +115,7 @@ class MultiProcessPixivSpider(Spider):
                 fails += item
 
             if index != 0:
-                print('Process getPixiv costs %.2f second with %d images\n'
-                      'Every picture costs %.2f second\n'
+                print('Processing costs %.2f second with %d images, %.2f second in average\n'
                       '%d images failed.' % ((end - start), index, (end - start) / index, fails))
             else:
                 print('%s%02d%02d has no new images...' % (date.year, date.month, date.day))
@@ -205,7 +204,7 @@ class MultiThreadPixivSpider(Spider):
             save_path = './original_images/%s%02d%02d' % (date.year, date.month, date.day)
             if not (os.path.exists(save_path)):
                 print(save_path + " now starts.")
-                os.mkdir(save_path)
+                os.makedirs(save_path)
             else:
                 print(save_path[-8::] + ' has been already retrieved.')
                 return None
@@ -236,8 +235,7 @@ class MultiThreadPixivSpider(Spider):
                 fails += item
 
             if index != 0:
-                print('Process getPixiv costs %.2f second with %d images\n'
-                      'Every picture costs %.2f second\n'
+                print('Processing costs %.2f second with %d images, %.2f second in average\n'
                       '%d images failed.' % ((end - start), index, (end - start) / index, fails))
             else:
                 print('%s%02d%02d has no new images...' % (date.year, date.month, date.day))

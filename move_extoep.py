@@ -15,7 +15,7 @@ def move_from_excellent_to_ep():
         return
     if not os.path.exists(save_path):
         print('Could not find the save path, created one.')
-        os.mkdir(save_path)
+        os.makedirs(save_path)
     config = configparser.ConfigParser()
     config.read(config_path)
     i_num = config.getint('image','num')
