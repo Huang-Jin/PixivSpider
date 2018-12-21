@@ -18,16 +18,17 @@ if __name__ == '__main__':
     i = 1
     spider = MultiThreadPixivSpider()
     now_date = begindate - datetime.timedelta(days=i)
-    try:
-        while True:
-            config.set('date', 'year', str(now_date.year))
-            config.set('date', 'month', str(now_date.month))
-            config.set('date', 'day', str(now_date.day))
-            with open(config_path, 'w') as cf:
-                config.write(cf)
-                spider.get_pixiv_images(now_date)
-            i += 1
-            now_date = begindate - datetime.timedelta(days=i)
-    except:
-        print("Scatching" + now_date.strftime("%Y-%m-%d") + ", unkown Error Occured.")
+    while True:
+        config.set('date', 'year', str(now_date.year))
+        config.set('date', 'month', str(now_date.month))
+        config.set('date', 'day', str(now_date.day))
+        try:
+            spider.get_pixiv_images(now_date)
+        except:
+            print("The date --" + now_date.strftime("%Y/%m/%d") + "-- has no data.")
+            break
+        with open(config_path, 'w') as cf:
+            config.write(cf)
+        i += 1
+        now_date = begindate - datetime.timedelta(days=i)
     os.system("pause")

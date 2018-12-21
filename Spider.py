@@ -141,12 +141,15 @@ class MultiThreadPixivSpider(Spider):
                "Referer": ""}
 
     @staticmethod
-    def get_referer(url):
-        reference = "http://www.pixiv.net/member_illust.php?mode=manga_big&illust_id="
+    def get_pixiv_id(url):
         reg = r'.+/(\d+)_p0'
-        return reference + re.findall(reg, url)[0] + "&page=0"
+        return re.findall(reg, url)[0]
 
-    def save_image(self, urls, save_path, index, q, pbar):
+    def get_referer(self, url):
+        reference = "http://www.pixiv.net/member_illust.php?mode=manga_big&illust_id="
+        return reference + self.get_pixiv_id(url) + "&page=0"
+
+    def save_image(self, urls, save_path, q, pbar):
         # self.lock.acquire()  # Make sure the lock will be released.
         # try:
             i = 0
@@ -175,7 +178,7 @@ class MultiThreadPixivSpider(Spider):
                     fails += 1
                     continue
                 i += 1
-                image_path = save_path + '/%s%s' % (index + i, os.path.splitext(url)[1])
+                image_path = save_path + '/%s%s' % (self.get_pixiv_id(url), os.path.splitext(url)[1])
 
                 for _ in range(0, repeat_times):
                     try:
@@ -242,7 +245,7 @@ class MultiThreadPixivSpider(Spider):
 
             pbar = tqdm(total=index, ascii=True)
             for i in range(len(indexes)):
-                p = threading.Thread(target=self.save_image, args=(imgurls[i], save_path, indexes[i], q, pbar))
+                p = threading.Thread(target=self.save_image, args=(imgurls[i], save_path, q, pbar))
                 p.start()
                 ps.append(p)
             for p in ps:
