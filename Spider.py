@@ -134,11 +134,14 @@ class Spider:
 #             raise Exception("Exception occured when scatching images.")
 
 class MultiThreadPixivSpider(Spider):
-    lock = threading.Lock()
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 '
+    def __init__(self):
+        Spider.__init__(self)
+        self.lock = threading.Lock()
+        self.headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 '
                              '(KHTML, like Gecko) Chrome/45.0.2454.101 Safari/537.36',
                "Connection": "keep-alive",
                "Referer": ""}
+        self.timeout = 1000
 
     @staticmethod
     def get_pixiv_id(url):
@@ -146,72 +149,84 @@ class MultiThreadPixivSpider(Spider):
         return re.findall(reg, url)[0]
 
     def get_referer(self, url):
-        reference = "http://www.pixiv.net/member_illust.php?mode=manga_big&illust_id="
-        return reference + self.get_pixiv_id(url) + "&page=0"
+        reference = "https://www.pixiv.net/member_illust.php?mode=medium&illust_id="
+        return reference + self.get_pixiv_id(url)
 
     def save_image(self, urls, save_path, q, pbar):
         # self.lock.acquire()  # Make sure the lock will be released.
         # try:
-            i = 0
-            fails = 0
-            repeat_times = 2
+        i = 0
+        fails = 0
+        repeat_times = 2
 
-            for url in urls:
-                url = url.replace('c/240x480/img-master', 'img-original')
-                url = url.replace('_master1200', '')
-                self.headers['Referer'] = self.get_referer(url)
-                # begin_time1 = time.time()
-                fail = 0
+        for url in urls:
+            url = url.replace('c/240x480/img-master', 'img-original')
+            url = url.replace('_master1200', '')
+            url = url.replace('.jpg', '.png')
+            self.headers['Referer'] = self.get_referer(url)
+            # begin_time1 = time.time()
+            fail = 0
+            try:
                 try:
-                    try:
-                        req = request.Request(url, None, self.headers)
-                        res = request.urlopen(req, timeout=1)
-                        res.close()
-                    except error.HTTPError:
-                        url = url.replace('.jpg', '.png')
-                        req = request.Request(url, None, self.headers)
-                        res = request.urlopen(req, timeout=1)
-                        res.close()
-                except:
-                    pbar.update(1)
-                    i += 1
-                    fails += 1
-                    continue
-                i += 1
-                image_path = save_path + '/%s%s' % (self.get_pixiv_id(url), os.path.splitext(url)[1])
-
-                for _ in range(0, repeat_times):
-                    try:
-                        res = request.urlopen(req, timeout=1)
-                        rstream = res.read()
-                        res.close()
-                        break
-                    except:
-                        res.close()
-                        fail += 1
-                        # print('repeat index %d -- %d.' % (index + i, fail))
-
-                if fail == repeat_times:
-                    # print('%d\t%s\tdownload image failed.'
-                    #       % (index + i, url))
-                    fails += 1
-                else:
-                    with open(image_path, 'wb') as f:
-                        f.write(rstream)
-                        # end_time1 = time.time()
-                        # print('%d\t%s\tdownload image costs %.2f seconds'
-                        #       % (index + i, url, end_time1 - begin_time1))
+                    req = request.Request(url, None, self.headers)
+                    res = request.urlopen(req, timeout=self.timeout)
+                    res.close()
+                except error.URLError as e:
+                    # if hasattr(e, 'code'):
+                    #     print("HTTPError")
+                    #     print(e.code)
+                    # elif hasattr(e, 'reason'):
+                    #     print("URLError")
+                    #     print(e.reason)
+                    url = url.replace('.png', '.jpg')
+                    req = request.Request(url, None, self.headers)
+                    res = request.urlopen(req, timeout=self.timeout)
+                    res.close()
+            except:
                 pbar.update(1)
+                i += 1
+                fails += 1
+                continue
+            i += 1
+            image_path = save_path + '/%s%s' % (self.get_pixiv_id(url), os.path.splitext(url)[1])
 
-            # print('Index %d to %d have been saved into files\t%d failed.\tProcess Over!...'
-            #       % (index + 1, index + i, fails))
-            q.put(fails)
+            for _ in range(0, repeat_times):
+                try:
+                    res = request.urlopen(req, timeout=self.timeout)
+                    rstream = res.read()
+                    res.close()
+                    break
+                except error.URLError as e:
+                    if hasattr(e, 'code'):
+                        print("HTTPError")
+                        print(e.code)
+                    elif hasattr(e, 'reason'):
+                        print("URLError")
+                        print(e.reason)
+                    res.close()
+                    fail += 1
+                    # print('repeat index %d -- %d.' % (index + i, fail))
+
+            if fail == repeat_times:
+                # print('%d\t%s\tdownload image failed.'
+                #       % (index + i, url))
+                fails += 1
+            else:
+                with open(image_path, 'wb') as f:
+                    f.write(rstream)
+                    # end_time1 = time.time()
+                    # print('%d\t%s\tdownload image costs %.2f seconds'
+                    #       % (index + i, url, end_time1 - begin_time1))
+            pbar.update(1)
+
+        # print('Index %d to %d have been saved into files\t%d failed.\tProcess Over!...'
+        #       % (index + 1, index + i, fails))
+        q.put(fails)
         # finally:
         #     self.lock.release()
 
     def get_pixiv_images(self, date):
         try:
-
             start = time.time()
             pagecount = 10
             page = 1
@@ -234,7 +249,7 @@ class MultiThreadPixivSpider(Spider):
                 r'class="new".+?data-filter="thumbnail-filter lazy-image"data-src="(.+?\.jpg)"data-type="illust"')
 
             while page <= pagecount and index < 100:
-                html = self.get_html("http://www.pixiv.net/ranking.php?mode=daily&"
+                html = self.get_html("https://www.pixiv.net/ranking.php?mode=daily&"
                                      "content=illust&p=%d&date=%s%02d%02d" % (page, date.year, date.month, date.day))
                 imgurl = re.findall(reg, html)
                 # print(len(imgurl))

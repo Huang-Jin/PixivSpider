@@ -1,3 +1,7 @@
 # images
-*.png
-*.jpg
+*.pyc
+ep_images/
+original_images/
+useless/
+.idea/
+__pycache__/
