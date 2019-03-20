@@ -5,6 +5,7 @@ from multiprocessing import Process, Queue
 import threading
 from urllib import request, error
 from tqdm import tqdm
+import http.client
 
 
 class Spider:
@@ -206,6 +207,10 @@ class MultiThreadPixivSpider(Spider):
                     res.close()
                     fail += 1
                     # print('repeat index %d -- %d.' % (index + i, fail))
+                except http.client.IncompleteRead as e:
+                    rstream = e.partial
+                    res.close()
+                    break
 
             if fail == repeat_times:
                 # print('%d\t%s\tdownload image failed.'
@@ -247,7 +252,6 @@ class MultiThreadPixivSpider(Spider):
 
             reg = re.compile(
                 r'class="new".+?data-filter="thumbnail-filter lazy-image"data-src="(.+?\.jpg)"data-type="illust"')
-
             while page <= pagecount and index < 100:
                 html = self.get_html("https://www.pixiv.net/ranking.php?mode=daily&"
                                      "content=illust&p=%d&date=%s%02d%02d" % (page, date.year, date.month, date.day))
